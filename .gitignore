@@ -18,6 +18,9 @@
 # Goland
 .idea
 
+# dotenv
+.env
+
 # Ignore static images
 static/images/*
 # Except anonim image
