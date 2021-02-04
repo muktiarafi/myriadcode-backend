@@ -13,7 +13,7 @@ type UserBaseProperty struct {
 
 type User struct {
 	UserBaseProperty
-	Password string `json:"password"`
+	Password string `json:"-"`
 }
 
 type UserPayload struct {
@@ -27,7 +27,7 @@ type CurrentUser struct {
 }
 
 type RegisterUser struct {
-	Name     string `json:"name" validate:"required,min=4,max=32"`
-	Nickname string `json:"nickname" validate:"required,min=1,max=10"`
-	Password string `json:"password" validate:"required,min=8"`
+	Name     string `json:"name"`
+	Nickname string `json:"nickname"`
+	Password string `json:"password"`
 }
