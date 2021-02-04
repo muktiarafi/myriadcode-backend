@@ -3,6 +3,7 @@ package service
 import (
 	"database/sql"
 	"errors"
+	"net/http"
 
 	"github.com/muktiarafi/myriadcode-backend/internal/apierror"
 	"github.com/muktiarafi/myriadcode-backend/internal/models"
@@ -49,6 +50,10 @@ func (ur *UserServiceImpl) CreateUser(userPostData *models.RegisterUser, imagePa
 	}
 
 	return currentUser, nil
+}
+
+func Login(w http.ResponseWriter, r *http.Request) {
+
 }
 
 func (ur *UserServiceImpl) UpdateUser(user *models.CurrentUser) (*models.CurrentUser, error) {

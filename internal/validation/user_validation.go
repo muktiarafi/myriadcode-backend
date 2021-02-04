@@ -13,3 +13,11 @@ func ValidateCreateUser(model *models.RegisterUser) error {
 
 	return err
 }
+
+func ValidateLogin(model *models.LoginRequest) error {
+	err := validation.ValidateStruct(model,
+		validation.Field(&model.Nickname, validation.Required),
+		validation.Field(&model.Password, validation.Required))
+
+	return err
+}

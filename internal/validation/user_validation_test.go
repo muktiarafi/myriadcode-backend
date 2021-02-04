@@ -1,8 +1,9 @@
 package validation
 
 import (
-	"github.com/muktiarafi/myriadcode-backend/internal/models"
 	"testing"
+
+	"github.com/muktiarafi/myriadcode-backend/internal/models"
 )
 
 func TestValidateCreateUser(t *testing.T) {
@@ -40,6 +41,30 @@ func TestValidateCreateUser(t *testing.T) {
 
 		if err := ValidateCreateUser(&register); err != nil {
 			t.Error("Should not get error but got one")
+		}
+	})
+}
+
+func TestValidateLogin(t *testing.T) {
+	t.Run("with empty value", func(t *testing.T) {
+		login := models.LoginRequest{
+			Nickname: "",
+			Password: "",
+		}
+
+		if err := ValidateLogin(&login); err == nil {
+			t.Error("Should get error but got none")
+		}
+	})
+
+	t.Run("valid values", func(t *testing.T) {
+		login := models.LoginRequest{
+			Nickname: "paijo",
+			Password: "1234578",
+		}
+
+		if err := ValidateLogin(&login); err != nil {
+			t.Error("Should no get error but got one")
 		}
 	})
 }
