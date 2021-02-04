@@ -7,9 +7,6 @@ ENV GO111MODULE=on \
 
 WORKDIR /app
 
-RUN apk update
-RUN apk add curl
-
 RUN go get -u github.com/cosmtrek/air
 
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.7.3/wait /wait
