@@ -1,6 +1,9 @@
 package main
 
 import (
+	"log"
+	"net/http"
+
 	"github.com/joho/godotenv"
 	"github.com/muktiarafi/myriadcode-backend/internal/configs"
 	"github.com/muktiarafi/myriadcode-backend/internal/driver"
@@ -10,8 +13,6 @@ import (
 	"github.com/muktiarafi/myriadcode-backend/internal/repository"
 	"github.com/muktiarafi/myriadcode-backend/internal/router"
 	"github.com/muktiarafi/myriadcode-backend/internal/service"
-	"log"
-	"net/http"
 )
 
 const portNumber = ":8000"
@@ -19,10 +20,13 @@ const portNumber = ":8000"
 func main() {
 	app := configs.NewAppConfig()
 	app.Logger = logs.NewLogger()
+	app.WithMigration = true
 
-	err := godotenv.Load()
-	if err != nil {
-		panic(err)
+	if app.DotEnv {
+		err := godotenv.Load()
+		if err != nil {
+			panic(err)
+		}
 	}
 	db, err := driver.ConnectSQL(
 		configs.PostgresDSN(),

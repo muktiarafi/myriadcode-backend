@@ -8,5 +8,6 @@ func NewAppConfig() *AppConfig {
 
 type AppConfig struct {
 	*logs.Logger
+	DotEnv        bool
 	WithMigration bool
 }

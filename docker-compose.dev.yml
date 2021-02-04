@@ -1,0 +1,28 @@
+version: '3'
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+     - 8000:8000
+    depends_on:
+     - postgres
+    volumes:
+      - .:/app
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: myriadcode
+      DB_USER: postgres
+      DB_PASSWORD: secret
+      WAIT_HOSTS: postgres:5432
+  
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_DB: myriadcode
+      POSTGRES_PASSWORD: secret
+     
+
+
