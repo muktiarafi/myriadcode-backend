@@ -1,13 +1,12 @@
 package configs
 
-import "log"
+import "github.com/muktiarafi/myriadcode-backend/internal/logs"
 
 func NewAppConfig() *AppConfig {
 	return &AppConfig{}
 }
 
 type AppConfig struct {
-	InfoLog    *log.Logger
-	WarningLog *log.Logger
-	ErrorLog   *log.Logger
+	*logs.Logger
+	WithMigration bool
 }
