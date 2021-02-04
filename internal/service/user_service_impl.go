@@ -3,6 +3,7 @@ package service
 import (
 	"database/sql"
 	"errors"
+
 	"github.com/muktiarafi/myriadcode-backend/internal/apierror"
 	"github.com/muktiarafi/myriadcode-backend/internal/models"
 	"github.com/muktiarafi/myriadcode-backend/internal/repository"
@@ -27,11 +28,13 @@ func (ur *UserServiceImpl) CreateUser(userPostData *models.RegisterUser, imagePa
 	}
 
 	user, err := ur.userRepository.FindUserByNickname(userPostData.Nickname)
-	if err != sql.ErrNoRows {
+	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
 	if len(user.Nickname) != 0 {
-		return nil, errors.New("nickname already taken")
+		return nil, apierror.NewBadRequestError(
+			errors.New("nickname already taken"), "nickname already taken",
+		)
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(userPostData.Password), 12)
@@ -49,25 +52,6 @@ func (ur *UserServiceImpl) CreateUser(userPostData *models.RegisterUser, imagePa
 }
 
 func (ur *UserServiceImpl) UpdateUser(user *models.CurrentUser) (*models.CurrentUser, error) {
-	//stmt := `UPDATE users
-	//SET name = $1, image_path = $2
-	//WHERE id = $3
-	//RETURNING id, name, image_path, nickname, is_admin, joined_at`
-	//
-	//var currentUser models.CurrentUser
-	//err := ur.DB.SQL.QueryRow(
-	//	stmt,
-	//	user.Name, user.ImagePath, user.ID).
-	//	Scan(
-	//		&currentUser.ID,
-	//		&currentUser.Name,
-	//		&currentUser.ImagePath,
-	//		&currentUser.Nickname,
-	//		&currentUser.IsAdmin,
-	//		&currentUser.JoinedAt)
-	//if err != nil {
-	//	return nil, err
-	//}
 
 	return &models.CurrentUser{}, nil
 }
