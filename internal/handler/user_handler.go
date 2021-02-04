@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/go-chi/chi"
 	"github.com/muktiarafi/myriadcode-backend/internal/helpers"
+	"github.com/muktiarafi/myriadcode-backend/internal/middlewares"
 	"github.com/muktiarafi/myriadcode-backend/internal/models"
 	"github.com/muktiarafi/myriadcode-backend/internal/service"
 	"net/http"
@@ -20,7 +21,7 @@ func NewUserHandler(userService *service.UserService) *UserHandler {
 
 func (uh *UserHandler) Route(mux *chi.Mux) {
 	mux.Route("/users", func(r chi.Router) {
-		r.Post("/register", uh.CreateUser)
+		r.With(middlewares.ImageUpload).Post("/register", uh.CreateUser)
 	})
 }
 
