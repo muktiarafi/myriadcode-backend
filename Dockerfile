@@ -7,6 +7,7 @@ ENV GO111MODULE=on \
 
 WORKDIR /app
 
+# to execute user submission
 RUN apk update
 RUN apk add python3
 RUN apk add nodejs
