@@ -44,7 +44,7 @@ func SendError(w http.ResponseWriter, err error) {
 		w.WriteHeader(e.StatusCode)
 
 		json.NewEncoder(w).Encode(&ErrorResponse{
-			BaseResponse{e.StatusCode, "Failed"},
+			BaseResponse{e.StatusCode, e.Kind.Error()},
 			e.Warning,
 		})
 		app.WarningLog.Printf("Client Error: %s", e.Error())
@@ -52,7 +52,7 @@ func SendError(w http.ResponseWriter, err error) {
 		w.WriteHeader(http.StatusInternalServerError)
 
 		json.NewEncoder(w).Encode(&ErrorResponse{
-			BaseResponse{http.StatusInternalServerError, "Failed"},
+			BaseResponse{http.StatusInternalServerError, apierror.InternalServerError.Error()},
 			apierror.InternalServerError.Error(),
 		})
 		app.ErrorLog.Printf("Server Error!!!: %s, stack trace:\n%s", err.Error(), debug.Stack())
