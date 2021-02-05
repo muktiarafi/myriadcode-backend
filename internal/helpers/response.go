@@ -3,7 +3,6 @@ package helpers
 import (
 	"encoding/json"
 	"github.com/muktiarafi/myriadcode-backend/internal/apierror"
-	"github.com/muktiarafi/myriadcode-backend/internal/configs"
 	"net/http"
 	"runtime/debug"
 )
@@ -21,12 +20,6 @@ type SuccessResponse struct {
 type ErrorResponse struct {
 	BaseResponse
 	Error string `json:"error"`
-}
-
-var app *configs.AppConfig
-
-func NewHelper(a *configs.AppConfig) {
-	app = a
 }
 
 func SendJSON(w http.ResponseWriter, status int, data interface{}) {

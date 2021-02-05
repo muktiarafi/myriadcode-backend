@@ -3,11 +3,10 @@ package helpers
 import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/muktiarafi/myriadcode-backend/internal/models"
-	"os"
 	"time"
 )
 
-var jwtKey = os.Getenv("JWT_KEY")
+var jwtKey = "example"
 
 type Claims struct {
 	User *models.UserPayload
@@ -15,10 +14,14 @@ type Claims struct {
 }
 
 func CreateToken(user *models.UserPayload) (string, error) {
+	return CreateTokenWithExpire(user, time.Now().Add(336*time.Hour).Unix())
+}
+
+func CreateTokenWithExpire(user *models.UserPayload, exp int64) (string, error) {
 	claims := &Claims{
 		User: user,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(336 * time.Hour).Unix(),
+			ExpiresAt: exp,
 		},
 	}
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
