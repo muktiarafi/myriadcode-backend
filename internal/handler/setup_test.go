@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"github.com/go-chi/chi"
@@ -12,7 +13,11 @@ import (
 	"github.com/muktiarafi/myriadcode-backend/internal/router"
 	"github.com/muktiarafi/myriadcode-backend/internal/service"
 	"github.com/ory/dockertest/v3"
+	"io/ioutil"
 	"log"
+	"mime/multipart"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
@@ -82,4 +87,24 @@ func SetTestDatabase() *sql.DB {
 	}
 
 	return db
+}
+
+func createUser(formData map[string]string) []byte {
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+
+	for k, v := range formData {
+		writer.WriteField(k, v)
+	}
+	writer.Close()
+
+	request := httptest.NewRequest(http.MethodPost, "/users/register", body)
+	request.Header.Set("Content-Type", writer.FormDataContentType())
+	response := httptest.NewRecorder()
+
+	mux.ServeHTTP(response, request)
+
+	responseBody, _ := ioutil.ReadAll(response.Body)
+
+	return responseBody
 }

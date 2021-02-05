@@ -1,14 +1,10 @@
 package handler
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/muktiarafi/myriadcode-backend/internal/helpers"
-	"io/ioutil"
-	"mime/multipart"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 )
 
@@ -21,21 +17,7 @@ func TestUserHandler_CreateUser(t *testing.T) {
 			"password": "12345678",
 		}
 
-		body := new(bytes.Buffer)
-		writer := multipart.NewWriter(body)
-
-		for k, v := range formData {
-			writer.WriteField(k, v)
-		}
-		writer.Close()
-
-		request := httptest.NewRequest(http.MethodPost, "/users/register", body)
-		request.Header.Set("Content-Type", writer.FormDataContentType())
-		response := httptest.NewRecorder()
-
-		mux.ServeHTTP(response, request)
-
-		responseBody, _ := ioutil.ReadAll(response.Body)
+		responseBody := createUser(formData)
 
 		apiResponse := helpers.SuccessResponse{}
 		json.Unmarshal(responseBody, &apiResponse)
@@ -55,21 +37,7 @@ func TestUserHandler_CreateUser(t *testing.T) {
 			"password": "12345678",
 		}
 
-		body := new(bytes.Buffer)
-		writer := multipart.NewWriter(body)
-
-		for k, v := range formData {
-			writer.WriteField(k, v)
-		}
-		writer.Close()
-
-		request := httptest.NewRequest(http.MethodPost, "/users/register", body)
-		request.Header.Set("Content-Type", writer.FormDataContentType())
-		response := httptest.NewRecorder()
-
-		mux.ServeHTTP(response, request)
-
-		responseBody, _ := ioutil.ReadAll(response.Body)
+		responseBody := createUser(formData)
 
 		apiResponse := helpers.ErrorResponse{}
 		json.Unmarshal(responseBody, &apiResponse)
@@ -81,6 +49,39 @@ func TestUserHandler_CreateUser(t *testing.T) {
 
 		if got != want {
 			t.Errorf("Expected status code %d got %d instead", want, got)
+		}
+	})
+
+	t.Run("Register with duplicate nickname", func(t *testing.T) {
+		formData := map[string]string{
+			"name":     "abcd",
+			"nickname": "paijo",
+			"password": "12345678",
+		}
+
+		responseBody := createUser(formData)
+
+		apiResponse := helpers.SuccessResponse{}
+		json.Unmarshal(responseBody, &apiResponse)
+
+		if apiResponse.Status != http.StatusOK {
+			t.Errorf("Expected %d status code, got %d instead", http.StatusOK, apiResponse.Status)
+		}
+
+		responseBody = createUser(formData)
+
+		errorResponse := helpers.ErrorResponse{}
+		json.Unmarshal(responseBody, &errorResponse)
+
+		if errorResponse.Status != http.StatusBadRequest {
+			t.Errorf("Expected %d status code, got %d instead", http.StatusOK, errorResponse.Status)
+		}
+
+		want := "nickname already taken"
+		got := errorResponse.Error
+
+		if got != want {
+			t.Errorf("Expected %q, but got %q instead", want, got)
 		}
 	})
 }
