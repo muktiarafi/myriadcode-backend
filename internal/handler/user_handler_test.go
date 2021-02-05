@@ -1,10 +1,18 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
 	"github.com/muktiarafi/myriadcode-backend/internal/helpers"
 	"github.com/muktiarafi/myriadcode-backend/internal/models"
+	"io"
+	"io/ioutil"
+	"mime/multipart"
 	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -124,4 +132,134 @@ func TestUserHandler_Authenticate(t *testing.T) {
 
 		assertResponseCode(t, apiResponse.Status, http.StatusBadRequest)
 	})
+}
+
+func TestUserHandler_UpdateUser(t *testing.T) {
+	t.Run("update user name", func(t *testing.T) {
+		formData := map[string]string{
+			"name": "udin",
+			"nickname": "ud",
+			"password": "12345678",
+		}
+
+		createUser(formData)
+
+		response, _ := login(&models.LoginRequest{
+			Nickname: formData["nickname"],
+			Password: formData["password"],
+		})
+
+		assertResponseCode(t, response.Result().StatusCode, http.StatusOK)
+
+		cookies := response.Result().Cookies()
+		updateUserData := map[string]string{
+			"name": "Udin U besar",
+		}
+
+		body := new(bytes.Buffer)
+		writer := multipart.NewWriter(body)
+
+		for k, v := range updateUserData {
+			writer.WriteField(k, v)
+		}
+		writer.Close()
+
+		request := httptest.NewRequest(http.MethodPut, "/users/update", body)
+		request.Header.Set("Content-Type", writer.FormDataContentType())
+		request.AddCookie(cookies[0])
+		response = httptest.NewRecorder()
+
+		mux.ServeHTTP(response, request)
+
+		responseBody, _ := ioutil.ReadAll(response.Body)
+
+		apiResponse := struct {
+			Data models.CurrentUser `json:"data"`
+		}{models.CurrentUser{}}
+		json.Unmarshal(responseBody, &apiResponse)
+
+		assertResponseCode(t, response.Result().StatusCode, http.StatusOK)
+
+		got := apiResponse.Data.Name
+		want := updateUserData["name"]
+
+		if got != want {
+			t.Errorf("Expected name to be changed to %q, but got %q instead", want, got)
+		}
+	})
+
+	t.Run("update user image", func(t *testing.T) {
+		formData := map[string]string{
+			"name": "paijo",
+			"nickname": "pai",
+			"password": "12345678",
+		}
+
+		responseBody := createUser(formData)
+
+		apiResponse := struct {
+			Data models.CurrentUser `json:"data"`
+		}{models.CurrentUser{}}
+		json.Unmarshal(responseBody, &apiResponse)
+
+		got := apiResponse.Data.ImagePath
+		want := "anonim.jpg"
+
+		assertImageName(t, got, want)
+
+		response, _ := login(&models.LoginRequest{
+			Nickname: formData["nickname"],
+			Password: formData["password"],
+		})
+
+		assertResponseCode(t, response.Result().StatusCode, http.StatusOK)
+
+		cookies := response.Result().Cookies()
+		const fileName = "gambar.png"
+		file, err := os.Open(testFileDir + "/" + fileName)
+		if err != nil {
+			t.Error(err)
+		}
+		defer file.Close()
+
+		body := new(bytes.Buffer)
+		writer := multipart.NewWriter(body)
+		part, err := writer.CreateFormFile("image", filepath.Base(fileName))
+		if err != nil {
+			t.Error(err)
+		}
+		_, err = io.Copy(part, file)
+		writer.Close()
+
+		request := httptest.NewRequest(http.MethodPut, "/users/update", body)
+		request.Header.Set("Content-Type", writer.FormDataContentType())
+		request.AddCookie(cookies[0])
+		response = httptest.NewRecorder()
+
+		mux.ServeHTTP(response, request)
+
+		assertResponseCode(t, response.Result().StatusCode, http.StatusOK)
+
+		responseBody, _ = ioutil.ReadAll(response.Body)
+
+		apiResponse = struct {
+			Data models.CurrentUser `json:"data"`
+		}{models.CurrentUser{}}
+		json.Unmarshal(responseBody, &apiResponse)
+
+		responseFileName := strings.Split(apiResponse.Data.ImagePath, "-")
+
+		got = responseFileName[len(responseFileName) - 1]
+		want = fileName
+
+		assertImageName(t, got, want)
+	})
+}
+
+func assertImageName(t testing.TB, got, want string) {
+	t.Helper()
+
+	if got != want {
+		t.Errorf("Expected image path to be %q, but got %q instead", want, got)
+	}
 }

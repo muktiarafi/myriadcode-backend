@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/go-chi/chi"
 	"github.com/muktiarafi/myriadcode-backend/internal/apierror"
 	"github.com/muktiarafi/myriadcode-backend/internal/helpers"
@@ -26,6 +27,7 @@ func (uh *UserHandler) Route(mux *chi.Mux) {
 	mux.Route("/users", func(r chi.Router) {
 		r.With(middlewares.ImageUpload).Post("/register", uh.CreateUser)
 		r.Post("/login", uh.Authenticate)
+		r.With(middlewares.RequireAuth, middlewares.ImageUpload).Put("/update", uh.UpdateUser)
 	})
 }
 
@@ -76,4 +78,29 @@ func (uh *UserHandler) Authenticate(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, &cookie)
 	helpers.SendJSON(w, http.StatusOK, "")
+}
+
+func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	userPayload, ok := r.Context().Value("user").(*models.UserPayload)
+	if !ok {
+		helpers.SendError(w, apierror.NewUnauthorizedError(
+			errors.New("unauthorized, missing payload"),
+			"unauthorized, missing payload"),
+		)
+	}
+
+	var imageName string
+	imageContext, ok := r.Context().Value("image").(string)
+	if ok {
+		imageName = imageContext
+	}
+
+	userName := r.FormValue("name")
+	updatedUser, err := uh.userService.UpdateUser(userPayload, userName, imageName)
+	if err != nil {
+		helpers.SendError(w, err)
+		return
+	}
+
+	helpers.SendJSON(w, http.StatusOK, updatedUser)
 }

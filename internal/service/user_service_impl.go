@@ -9,6 +9,7 @@ import (
 	"github.com/muktiarafi/myriadcode-backend/internal/repository"
 	"github.com/muktiarafi/myriadcode-backend/internal/validation"
 	"golang.org/x/crypto/bcrypt"
+	"os"
 )
 
 type UserServiceImpl struct {
@@ -85,7 +86,32 @@ func (us *UserServiceImpl) Authenticate(loginRequest *models.LoginRequest) (stri
 	return token, nil
 }
 
-func (us *UserServiceImpl) UpdateUser(user *models.CurrentUser) (*models.CurrentUser, error) {
+func (us *UserServiceImpl) UpdateUser(userPayload *models.UserPayload, userName, imageName string) (*models.CurrentUser, error) {
+	user, err := us.userRepository.FindCurrentUserByID(userPayload.ID)
+	if err == sql.ErrNoRows {
+		return nil, apierror.NewBadRequestError(err, "User Not Found")
+	} else if err != nil {
+		return nil, err
+	}
 
-	return &models.CurrentUser{}, nil
+	if len(imageName) != 0 {
+		if user.ImagePath != "anonim.jpg" {
+			if err := os.Remove("./static/images" + imageName); err != nil {
+				return nil, err
+			}
+		}
+
+		user.ImagePath = imageName
+	}
+
+	if len(userName) != 0 {
+		user.Name = userName
+	}
+
+	currentUser, err := us.userRepository.UpdateUser(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return currentUser, nil
 }

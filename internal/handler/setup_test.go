@@ -10,6 +10,7 @@ import (
 	"github.com/muktiarafi/myriadcode-backend/internal/driver"
 	"github.com/muktiarafi/myriadcode-backend/internal/helpers"
 	"github.com/muktiarafi/myriadcode-backend/internal/logs"
+	"github.com/muktiarafi/myriadcode-backend/internal/middlewares"
 	"github.com/muktiarafi/myriadcode-backend/internal/models"
 	"github.com/muktiarafi/myriadcode-backend/internal/repository"
 	"github.com/muktiarafi/myriadcode-backend/internal/router"
@@ -36,10 +37,13 @@ var (
 
 var mux *chi.Mux
 
+const testFileDir = "../../static/test-file"
+
 func TestMain(m *testing.M) {
 	app := configs.NewAppConfig()
 	app.Logger = logs.NewLogger()
 
+	middlewares.SetSaveFileDir(testFileDir)
 	mux = router.SetRouter()
 
 	db := driver.DB{
@@ -128,6 +132,6 @@ func assertResponseCode(t testing.TB, got, want int) {
 	t.Helper()
 
 	if got != want {
-		t.Errorf("Expected status code %d, but got %d instead", got, want)
+		t.Errorf("Expected status code %d, but got %d instead", want, got)
 	}
 }
