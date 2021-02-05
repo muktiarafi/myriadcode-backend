@@ -16,7 +16,7 @@ import (
 )
 
 func TestImageUpload(t *testing.T) {
-	const testFileDir = "../../static/test-file"
+
 	t.Run("with image", func(t *testing.T) {
 		file, err := os.Open(testFileDir + "/gambar.png")
 		if err != nil {

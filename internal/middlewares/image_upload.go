@@ -56,6 +56,11 @@ func ImageUpload(next http.Handler) http.Handler {
 	})
 }
 
+// SetSaveFileDir set where to save uploaded file image. Mostly used for test only
+func SetSaveFileDir(fileDir string) {
+	saveFileDir = fileDir
+}
+
 func isAllowedFormat(format string) bool {
 	formats := map[string]struct{}{
 		"jpg":  {},

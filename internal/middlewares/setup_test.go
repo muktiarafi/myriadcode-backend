@@ -15,6 +15,7 @@ import (
 var mux *chi.Mux
 
 const withoutImageResponseMessage = "Missing image name context"
+const testFileDir = "../../static/test-file"
 
 var payload = models.UserPayload{
 	ID:       1,
@@ -27,7 +28,7 @@ func TestMain(m *testing.M) {
 	app.Logger = logs.NewLogger()
 	helpers.NewHelper(app)
 
-	saveFileDir = "."
+	saveFileDir = testFileDir
 	mux = chi.NewRouter()
 	mux.With(ImageUpload).Post("/image", testUploadImageHandler)
 	mux.Post("/cookie", setCookieHandler)
