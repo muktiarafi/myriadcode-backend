@@ -32,3 +32,9 @@ func NewBadRequestError(err error, warning string) *Error {
 	checkWarning(&warning, kind.Error())
 	return &Error{http.StatusBadRequest, err, kind, warning}
 }
+
+func NewUnauthorizedError(err error, warning string) *Error {
+	kind := UnathorizedError
+	checkWarning(&warning, kind.Error())
+	return &Error{http.StatusUnauthorized, err, kind, warning}
+}

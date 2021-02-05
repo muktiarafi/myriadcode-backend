@@ -22,6 +22,11 @@ myriadcode
 # dotenv
 .env
 
+# test-image
+static/test-file/*
+!/static/test-file/gambar.png
+!/static/test-file/test.txt
+
 # Ignore static images
 static/images/*
 # Except anonim image
