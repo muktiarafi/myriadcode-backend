@@ -64,7 +64,7 @@ func setCookieHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &cookie)
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 }
 
 func requireAuthHandler(w http.ResponseWriter, r *http.Request) {
