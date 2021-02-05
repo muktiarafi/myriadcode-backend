@@ -2,8 +2,8 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/muktiarafi/myriadcode-backend/internal/helpers"
+	"github.com/muktiarafi/myriadcode-backend/internal/models"
 	"net/http"
 	"testing"
 )
@@ -22,12 +22,7 @@ func TestUserHandler_CreateUser(t *testing.T) {
 		apiResponse := helpers.SuccessResponse{}
 		json.Unmarshal(responseBody, &apiResponse)
 
-		got := apiResponse.Status
-		want := http.StatusOK
-
-		if got != want {
-			t.Errorf("Expected status code %d got %d instead", want, got)
-		}
+		assertResponseCode(t, apiResponse.Status, http.StatusOK)
 	})
 
 	t.Run("Send invalid registration data to the user", func(t *testing.T) {
@@ -42,14 +37,7 @@ func TestUserHandler_CreateUser(t *testing.T) {
 		apiResponse := helpers.ErrorResponse{}
 		json.Unmarshal(responseBody, &apiResponse)
 
-		got := apiResponse.Status
-		want := http.StatusBadRequest
-
-		fmt.Println(apiResponse.Error)
-
-		if got != want {
-			t.Errorf("Expected status code %d got %d instead", want, got)
-		}
+		assertResponseCode(t, apiResponse.Status, http.StatusBadRequest)
 	})
 
 	t.Run("Register with duplicate nickname", func(t *testing.T) {
@@ -64,18 +52,14 @@ func TestUserHandler_CreateUser(t *testing.T) {
 		apiResponse := helpers.SuccessResponse{}
 		json.Unmarshal(responseBody, &apiResponse)
 
-		if apiResponse.Status != http.StatusOK {
-			t.Errorf("Expected %d status code, got %d instead", http.StatusOK, apiResponse.Status)
-		}
+		assertResponseCode(t, apiResponse.Status, http.StatusOK)
 
 		responseBody = createUser(formData)
 
 		errorResponse := helpers.ErrorResponse{}
 		json.Unmarshal(responseBody, &errorResponse)
 
-		if errorResponse.Status != http.StatusBadRequest {
-			t.Errorf("Expected %d status code, got %d instead", http.StatusOK, errorResponse.Status)
-		}
+		assertResponseCode(t, errorResponse.Status, http.StatusBadRequest)
 
 		want := "nickname already taken"
 		got := errorResponse.Error
@@ -83,5 +67,61 @@ func TestUserHandler_CreateUser(t *testing.T) {
 		if got != want {
 			t.Errorf("Expected %q, but got %q instead", want, got)
 		}
+	})
+}
+
+func TestUserHandler_Authenticate(t *testing.T) {
+	formData := map[string]string{
+		"name":     "abcd",
+		"nickname": "paimin",
+		"password": "12345678",
+	}
+
+	createUser(formData)
+
+	t.Run("login with already created user", func(t *testing.T) {
+		loginRequest := models.LoginRequest{
+			Nickname: formData["nickname"],
+			Password: formData["password"],
+		}
+
+		response, responseBody := login(&loginRequest)
+
+		apiResponse := helpers.SuccessResponse{}
+		json.Unmarshal(responseBody, &apiResponse)
+
+		assertResponseCode(t, apiResponse.Status, http.StatusOK)
+
+		if len(response.Result().Cookies()) == 0 {
+			t.Error("Should get cookie but get none")
+		}
+	})
+
+	t.Run("login with not exist user", func(t *testing.T) {
+		loginRequest := models.LoginRequest{
+			Nickname: "budi",
+			Password: formData["password"],
+		}
+
+		_, responseBody := login(&loginRequest)
+
+		apiResponse := helpers.ErrorResponse{}
+		json.Unmarshal(responseBody, &apiResponse)
+
+		assertResponseCode(t, apiResponse.Status, http.StatusBadRequest)
+	})
+
+	t.Run("login with not valid password", func(t *testing.T) {
+		loginRequest := models.LoginRequest{
+			Nickname: formData["nickname"],
+			Password: "12345",
+		}
+
+		_, responseBody := login(&loginRequest)
+
+		apiResponse := helpers.ErrorResponse{}
+		json.Unmarshal(responseBody, &apiResponse)
+
+		assertResponseCode(t, apiResponse.Status, http.StatusBadRequest)
 	})
 }

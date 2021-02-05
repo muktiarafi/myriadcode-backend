@@ -3,9 +3,8 @@ package service
 import (
 	"database/sql"
 	"errors"
-	"net/http"
-
 	"github.com/muktiarafi/myriadcode-backend/internal/apierror"
+	"github.com/muktiarafi/myriadcode-backend/internal/helpers"
 	"github.com/muktiarafi/myriadcode-backend/internal/models"
 	"github.com/muktiarafi/myriadcode-backend/internal/repository"
 	"github.com/muktiarafi/myriadcode-backend/internal/validation"
@@ -22,13 +21,13 @@ func NewUserService(userRepository *repository.UserRepository) UserService {
 	}
 }
 
-func (ur *UserServiceImpl) CreateUser(userPostData *models.RegisterUser, imagePath string) (*models.CurrentUser, error) {
+func (us *UserServiceImpl) CreateUser(userPostData *models.RegisterUser, imagePath string) (*models.CurrentUser, error) {
 	err := validation.ValidateCreateUser(userPostData)
 	if err != nil {
 		return nil, apierror.NewBadRequestError(err, err.Error())
 	}
 
-	user, err := ur.userRepository.FindUserByNickname(userPostData.Nickname)
+	user, err := us.userRepository.FindUserByNickname(userPostData.Nickname)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
@@ -44,7 +43,7 @@ func (ur *UserServiceImpl) CreateUser(userPostData *models.RegisterUser, imagePa
 	}
 
 	userPostData.Password = string(hash)
-	currentUser, err := ur.userRepository.CreateUser(userPostData, imagePath)
+	currentUser, err := us.userRepository.CreateUser(userPostData, imagePath)
 	if err != nil {
 		return nil, err
 	}
@@ -52,11 +51,41 @@ func (ur *UserServiceImpl) CreateUser(userPostData *models.RegisterUser, imagePa
 	return currentUser, nil
 }
 
-func Login(w http.ResponseWriter, r *http.Request) {
+func (us *UserServiceImpl) Authenticate(loginRequest *models.LoginRequest) (string, error) {
+	err := validation.ValidateLogin(loginRequest)
+	if err != nil {
+		return "", apierror.NewBadRequestError(err, err.Error())
+	}
 
+	user, err := us.userRepository.FindUserByNickname(loginRequest.Nickname)
+	if  err == sql.ErrNoRows {
+		return "", apierror.NewBadRequestError(
+			errors.New("invalid nickname or password"), "invalid nickname or password")
+	} else if err != nil {
+		return "", err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginRequest.Password))
+	if err == bcrypt.ErrMismatchedHashAndPassword {
+		return "", apierror.NewBadRequestError(
+			errors.New("invalid nickname or password"), "invalid nickname or password")
+	} else if err != nil {
+		return "", err
+	}
+
+	token, err := helpers.CreateToken(&models.UserPayload{
+		ID:       user.ID,
+		Nickname: user.Nickname,
+		IsAdmin:  user.IsAdmin,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
 }
 
-func (ur *UserServiceImpl) UpdateUser(user *models.CurrentUser) (*models.CurrentUser, error) {
+func (us *UserServiceImpl) UpdateUser(user *models.CurrentUser) (*models.CurrentUser, error) {
 
 	return &models.CurrentUser{}, nil
 }

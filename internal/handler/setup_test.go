@@ -3,12 +3,14 @@ package handler
 import (
 	"bytes"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/muktiarafi/myriadcode-backend/internal/configs"
 	"github.com/muktiarafi/myriadcode-backend/internal/driver"
 	"github.com/muktiarafi/myriadcode-backend/internal/helpers"
 	"github.com/muktiarafi/myriadcode-backend/internal/logs"
+	"github.com/muktiarafi/myriadcode-backend/internal/models"
 	"github.com/muktiarafi/myriadcode-backend/internal/repository"
 	"github.com/muktiarafi/myriadcode-backend/internal/router"
 	"github.com/muktiarafi/myriadcode-backend/internal/service"
@@ -107,4 +109,25 @@ func createUser(formData map[string]string) []byte {
 	responseBody, _ := ioutil.ReadAll(response.Body)
 
 	return responseBody
+}
+
+func login(loginRequest *models.LoginRequest) (*httptest.ResponseRecorder, []byte) {
+	loginJSON, _ := json.Marshal(loginRequest)
+
+	request := httptest.NewRequest(http.MethodPost, "/users/login", bytes.NewBuffer(loginJSON))
+	response := httptest.NewRecorder()
+
+	mux.ServeHTTP(response, request)
+
+	responseBody, _ := ioutil.ReadAll(response.Body)
+
+	return response, responseBody
+}
+
+func assertResponseCode(t testing.TB, got, want int) {
+	t.Helper()
+
+	if got != want {
+		t.Errorf("Expected status code %d, but got %d instead", got, want)
+	}
 }
